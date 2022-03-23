@@ -1,0 +1,7 @@
+Running 3/23/2022 12:07:18 PM
+Processing day 20220322
+Created 20220322 directory in Output folder.
+Combining student 00129080
+Combining student 00129081
+Created combined-log.txt.
+Archived all folders in processed folders.

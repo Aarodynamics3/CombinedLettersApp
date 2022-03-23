@@ -7,14 +7,12 @@ namespace CombinedLettersApp {
             // Directory path of the application executable.
             var startupPath = Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName);
 
-            /* 
-             * File path for the CombinedLetters folder. Would likely be in another location
-             * but uses startupPath here because it is nested in the application folders. Uses
-             * Path.Combine to move up two directories from /bin/Debug.
-             */
-            var combinedLettersPath = $"{Path.GetFullPath(Path.Combine(startupPath, "..", ".."))}\\CombinedLetters";
+            var combinedPath = $"{startupPath}\\CombinedLetters";
 
-            LetterService letterService = new LetterService(combinedLettersPath);
+            // If not in the right spot don't do anything.
+            if (!Directory.Exists(combinedPath)) Environment.Exit(0);
+
+            LetterService letterService = new LetterService(combinedPath);
             letterService.Run();
         }
     }
