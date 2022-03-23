@@ -15,7 +15,7 @@ namespace CombinedLettersApp {
             var combinedLettersPath = $"{Path.GetFullPath(Path.Combine(startupPath, "..", ".."))}\\CombinedLetters";
 
             LetterService letterService = new LetterService(combinedLettersPath);
-            letterService.run();
+            letterService.Run();
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Collections;
+using System.Collections.Generic;
 
 namespace CombinedLettersApp {
     public interface ILetterService {
@@ -22,7 +22,7 @@ namespace CombinedLettersApp {
             this.outputPath = $"{combinedLettersPath}\\Output";
         }
           
-        public void run() {
+        public void Run() {
             var admissionPath = $"{inputPath}\\Admission";
             var scholarshipPath = $"{inputPath}\\Scholarship";
 
@@ -36,28 +36,39 @@ namespace CombinedLettersApp {
 
             foreach (var day in admissions.Intersect(scholarships)) {
                 // Lists of student IDs from admissions and scholarships.
-                ArrayList aList = getStudentIds(admissionPath, day), 
-                          sList = getStudentIds(scholarshipPath, day);
+                var students = getStudentIds(admissionPath, day).Intersect(getStudentIds(scholarshipPath, day));
 
-                var students = aList.ToArray().Intersect(sList.ToArray());
+                // If there are no students to process, skip this day.
+                if (students.Count() == 0) continue;
 
-                // If there are students to be processed and the day folder does not yet exist create it.
-                if (students.Count() != 0 && !Directory.Exists($"{outputPath}\\{day}")) {
-                    Directory.CreateDirectory($"{outputPath}\\{day}");
-                }
+                // Output combined results file text.
+                string outputResult = DateTime.Today.ToString("dd/MM/yyyy") + " Report\n" +
+                                      "-----------------------------\n" +
+                                      $"Number of Combined Letters: {students.Count()}\n";
+
+                // Create the day folder in the Output dir.
+                Directory.CreateDirectory($"{outputPath}\\{day}");
 
                 // For each student that has a file in both admissions and scholarships.
                 foreach (var student in students) {
-                    var resultFile = $"{outputPath}\\{day}\\combined-{student}.txt";
+                    // Add student ID to combined output list.
+                    outputResult += student + "\n";
+
                     CombineTwoLetters($"{admissionPath}\\{day}\\admission-{student}.txt",
                                       $"{scholarshipPath}\\{day}\\scholarship-{student}.txt",
-                                      resultFile);
+                                      $"{outputPath}\\{day}\\combined-{student}.txt");
                 }
+
+                // Create the combined-log file in the Output folder.
+                File.WriteAllText($"{outputPath}\\{day}\\combined-log.txt", outputResult);
+
+                //TODO Archive
             }
         }
 
-        private ArrayList getStudentIds(string filePath, string day) {
-            var list = new ArrayList();
+        // Given a filepath to a day, returns a list of student IDs.
+        private List<String> getStudentIds(string filePath, string day) {
+            List<string> list = new List<string>();
 
             foreach (var f in Directory.GetFiles($"{filePath}\\{day}")) {
                 // Remove the admissions from the filename (ex: admissions-01830102)
@@ -69,7 +80,7 @@ namespace CombinedLettersApp {
 
         // Combines two letters into one result file in the Output folder. 
         public void CombineTwoLetters(string inputFile1, string inputFile2, string resultFile) {
-            File.WriteAllText(resultFile, File.ReadAllText(inputFile1) + "\n" + File.ReadAllText(inputFile2));
+            File.WriteAllText(resultFile, File.ReadAllText(inputFile1) + "\n\n" + File.ReadAllText(inputFile2));
         }
     }
 }

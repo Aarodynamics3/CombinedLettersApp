@@ -4,7 +4,7 @@
 2. Documented time:    
     - 20 minutes project setup
     - 1hr
-    - 
+    - 30 minutes
 
 **Details and explanations.**
 
