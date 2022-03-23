@@ -5,6 +5,13 @@ using System.Collections.Generic;
 
 namespace CombinedLettersApp {
     public interface ILetterService {
+        /*
+         * Combines two letter files into one file.
+         * 
+         * inputFile1: File path for first letter.
+         * inputFile2: File path for second letter.
+         * resultFile: File path for the combined letter.
+         */
         void CombineTwoLetters(string inputFile1, string inputFile2, string resultFile);
     }
 
@@ -14,15 +21,18 @@ namespace CombinedLettersApp {
     * generate a text report of the combined letters and move the processed files into Archive.
     */
     public class LetterService : ILetterService {
-        private string inputPath, archivePath, outputPath;
+        private string inputPath, archivePath, outputPath, logOutput;
 
         public LetterService(string combinedLettersPath) {
             this.inputPath = $"{combinedLettersPath}\\Input";
             this.archivePath = $"{combinedLettersPath}\\Archive";
             this.outputPath = $"{combinedLettersPath}\\Output";
+            this.logOutput = "";
         }
           
+        // Main function to run the LetterService process.
         public void Run() {
+            log("Running " + DateTime.Now);
             var admissionPath = $"{inputPath}\\Admission";
             var scholarshipPath = $"{inputPath}\\Scholarship";
 
@@ -34,12 +44,18 @@ namespace CombinedLettersApp {
                                         .Select(Path.GetFileName)
                                         .ToArray();
 
+            // For each day folder in both Admission and Scholarship.
             foreach (var day in admissions.Intersect(scholarships)) {
+                log("Processing day " + day);
+
                 // Lists of student IDs from admissions and scholarships.
                 var students = getStudentIds(admissionPath, day).Intersect(getStudentIds(scholarshipPath, day));
 
                 // If there are no students to process, skip this day.
-                if (students.Count() == 0) continue;
+                if (students.Count() == 0) {
+                    log("No messages to combine for " + day + ", continuing.");
+                    continue;
+                }
 
                 // Output combined results file text.
                 string outputResult = DateTime.Today.ToString("dd/MM/yyyy") + " Report\n" +
@@ -48,11 +64,13 @@ namespace CombinedLettersApp {
 
                 // Create the day folder in the Output dir.
                 Directory.CreateDirectory($"{outputPath}\\{day}");
+                log("Created " + day + " directory in Output folder.");
 
                 // For each student that has a file in both admissions and scholarships.
                 foreach (var student in students) {
                     // Add student ID to combined output list.
                     outputResult += student + "\n";
+                    log("Combining student " + student);
 
                     CombineTwoLetters($"{admissionPath}\\{day}\\admission-{student}.txt",
                                       $"{scholarshipPath}\\{day}\\scholarship-{student}.txt",
@@ -61,8 +79,23 @@ namespace CombinedLettersApp {
 
                 // Create the combined-log file in the Output folder.
                 File.WriteAllText($"{outputPath}\\{day}\\combined-log.txt", outputResult);
+                log("Created combined-log.txt.");
+            }
 
-                //TODO Archive
+            // Archive all of the processed folders.
+            archive(admissions, admissionPath, "Admission");
+            archive(scholarships, scholarshipPath, "Scholarship");
+            log("Archived all folders in processed folders.");
+
+            // Creating log file.
+            var time = DateTime.Now.ToString("o");
+            File.WriteAllText(Path.Combine(outputPath, DateTime.Now.ToString("yyyy-MM-dd-HH-mm-ss") + ".txt"), logOutput);
+        }
+
+        // Given an array of folders and their directory, move to respective (string type) Archive dir.
+        private void archive(string[] folders, string path, string type) {
+            foreach (var folder in folders) {
+                Directory.Move($"{path}\\{folder}", $"{archivePath}\\{type}\\{folder}");
             }
         }
 
@@ -76,6 +109,11 @@ namespace CombinedLettersApp {
             }
 
             return list;
+        }
+
+        // Log function that just writes to log string, implemented for readability.
+        private void log(string message) {
+            logOutput += message + "\n";
         }
 
         // Combines two letters into one result file in the Output folder. 
